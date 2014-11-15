@@ -182,6 +182,10 @@ public abstract class Property<TYPE> extends Field implements Cloneable {
             super(table, name, flags);
         }
 
+        public StringProperty(String name, String expression) {
+            super(null, name, expression);
+        }
+
         @Override
         public <RETURN, PARAMETER> RETURN accept(
                 PropertyVisitor<RETURN, PARAMETER> visitor, PARAMETER data) {
@@ -230,6 +234,10 @@ public abstract class Property<TYPE> extends Field implements Cloneable {
             super(table, name, flags);
         }
 
+        public LongProperty(String name, String expression) {
+            super(null, name, expression);
+        }
+
         @Override
         public <RETURN, PARAMETER> RETURN accept(
                 PropertyVisitor<RETURN, PARAMETER> visitor, PARAMETER data) {
@@ -263,6 +271,20 @@ public abstract class Property<TYPE> extends Field implements Cloneable {
     /** Runs a SQL function and returns the result as a string */
     public static class IntegerFunctionProperty extends IntegerProperty {
         public IntegerFunctionProperty(String function, String columnName) {
+            super(columnName, function);
+            alias = columnName;
+        }
+    }
+
+    public static class StringFunctionProperty extends StringProperty {
+        public StringFunctionProperty(String function, String columnName) {
+            super(columnName, function);
+            alias = columnName;
+        }
+    }
+
+    public static class LongFunctionProperty extends LongProperty {
+        public LongFunctionProperty(String function, String columnName) {
             super(columnName, function);
             alias = columnName;
         }

@@ -7,14 +7,25 @@ import com.todoroo.andlib.data.AbstractModel;
 import com.todoroo.andlib.data.Callback;
 import com.todoroo.andlib.data.Property;
 import com.todoroo.andlib.data.TodorooCursor;
+import com.todoroo.andlib.sql.Aggregations;
 import com.todoroo.andlib.sql.Criterion;
+import com.todoroo.andlib.sql.Field;
+import com.todoroo.andlib.sql.Functions;
+import com.todoroo.andlib.sql.Join;
+import com.todoroo.andlib.sql.Order;
 import com.todoroo.andlib.sql.Query;
+import com.todoroo.andlib.sql.SqlConstants;
+import com.todoroo.astrid.data.TagData;
 import com.todoroo.astrid.data.Task;
 import com.todoroo.astrid.data.TaskTimeLog;
+import com.todoroo.astrid.data.views.AbstractTimeLogReport;
+import com.todoroo.astrid.data.views.TimeLogByListReport;
+import com.todoroo.astrid.data.views.TimeLogByTaskReport;
 
 import org.tasks.helper.UUIDHelper;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -24,10 +35,13 @@ import javax.inject.Singleton;
 @Singleton
 public class TaskTimeLogDao extends RemoteModelDao<TaskTimeLog> {
 
+    private final Database database;
+
     @Inject
     public TaskTimeLogDao(Database database) {
         super(TaskTimeLog.class);
         setDatabase(database);
+        this.database = database;
     }
 
     public static void migrateLoggedTime(SQLiteDatabase database){
@@ -123,5 +137,54 @@ public class TaskTimeLogDao extends RemoteModelDao<TaskTimeLog> {
 
     public void byTask(long taskId, Callback<TaskTimeLog> callback) {
         query(callback, Query.select(TaskTimeLog.PROPERTIES).where(TaskTimeLogCriteria.byTaskId(taskId)));
+    }
+
+    public <T extends AbstractTimeLogReport> TodorooCursor<T> getReport(Class<T> type, AbstractTimeLogReport.GroupByTime timeSpan){
+        List<Field> select = new ArrayList<>();
+        select.add(new Property.LongFunctionProperty(Aggregations.sum(TaskTimeLog.TIME_SPENT).toString(),AbstractTimeLogReport.TIME_SUM.getColumnName()));
+        List<Field> groupBy = new ArrayList<>();
+        Field startTime=null, endTime=null;
+        Field secondaryOrder=null;
+        if (type.equals(TimeLogByTaskReport.class)){
+            groupBy.addAll(Arrays.asList(Task.PROPERTIES));
+            secondaryOrder = Task.TITLE;
+        } else if (type.equals(TimeLogByListReport.class)){
+            groupBy.addAll(Arrays.asList(TagData.PROPERTIES));
+            secondaryOrder = TagData.NAME;
+        }
+
+        switch (timeSpan){
+            case DAY:
+                startTime = Functions.date(TaskTimeLog.TIME, SqlConstants.DATEMODIFIER_START_OF_DAY);
+                endTime = Functions.date(false, startTime, "'+1 day'");
+                break;
+            case WEEK:
+                startTime = Functions.date(TaskTimeLog.TIME, SqlConstants.DATEMODIFIER_START_OF_NEXT_WEEK, "'-7 days'");
+                endTime = Functions.date(false, startTime, "'+7 days'");
+                break;
+            case MONTH:
+                startTime = Functions.date(TaskTimeLog.TIME, SqlConstants.DATEMODIFIER_START_OF_MONTH);
+                endTime = Functions.date(false, startTime, "'+31 days'", SqlConstants.DATEMODIFIER_START_OF_MONTH);
+                break;
+        }
+        startTime = new Property.StringFunctionProperty(startTime.toString(), AbstractTimeLogReport.REPORT_ENTRY_START.getColumnName());
+        endTime = new Property.StringFunctionProperty(endTime.toString(),AbstractTimeLogReport.REPORT_ENTRY_END.getColumnName());
+        groupBy.add(startTime);
+        select.add(endTime);
+        select.addAll(groupBy);
+
+        Order order = Order.desc(startTime);
+        order.addSecondaryExpression(Order.asc(secondaryOrder));
+
+        Query query = Query.select(select.toArray(new Field[select.size()]))
+                .from(TaskTimeLog.TABLE)
+                .join(Join.inner(Task.TABLE, TaskTimeLog.TASK_ID.eq(Task.ID)))
+                .groupBy(groupBy.toArray(new Field[groupBy.size()]))
+                .orderBy(order);
+
+
+        Cursor cursor = database.rawQuery(query.toString());
+
+        return new TodorooCursor<>(cursor, query.getFields());
     }
 }

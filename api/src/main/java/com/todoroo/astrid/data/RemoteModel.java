@@ -11,6 +11,7 @@ import android.text.TextUtils;
 
 import com.todoroo.andlib.data.AbstractModel;
 import com.todoroo.andlib.data.Property.StringProperty;
+import com.todoroo.andlib.data.Table;
 import com.todoroo.andlib.data.TodorooCursor;
 
 import org.json.JSONException;
@@ -42,7 +43,7 @@ abstract public class RemoteModel extends AbstractModel {
     public static final String UUID_PROPERTY_NAME = "remoteId"; //$NON-NLS-1$
 
     /** remote id property */
-    public static final StringProperty UUID_PROPERTY = new StringProperty(null, UUID_PROPERTY_NAME);
+    public static final StringProperty UUID_PROPERTY = new StringProperty((Table)null, UUID_PROPERTY_NAME);
 
     /** constant value for no uuid */
     public static final String NO_UUID = "0"; //$NON-NLS-1$

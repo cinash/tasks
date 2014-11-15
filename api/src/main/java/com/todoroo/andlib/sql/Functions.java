@@ -5,12 +5,17 @@
  */
 package com.todoroo.andlib.sql;
 
+import android.text.TextUtils;
+
+import com.google.common.collect.ObjectArrays;
 import com.todoroo.andlib.data.Property.StringProperty;
 
 
 
 
 public final class Functions {
+
+
 
     public static String caseStatement(Criterion when, Object ifTrue, Object ifFalse) {
         return "(CASE WHEN " + when.toString() + " THEN " + value(ifTrue) + " ELSE " + value(ifFalse) + " END)";
@@ -38,5 +43,30 @@ public final class Functions {
 
     public static Field length(StringProperty field) {
         return new Field("LENGTH(" + field.toString() + ")");
+    }
+
+    public static Field date(Field dateField, String... dateModifiers){
+        return date(true, dateField, dateModifiers);
+    }
+
+    public static Field date(boolean applyToLongField, Field dateField, String... dateModifiers){
+        String[] standardModifiers;
+        if (applyToLongField) {
+            standardModifiers = new String[]{SqlConstants.DATEMODIFIER_UNIXEPOCH, SqlConstants.DATEMODIFIER_LOCALTIME};
+        } else {
+            standardModifiers = new String[]{};
+        }
+        return new Field("date(" +dateField.toString()
+                + (applyToLongField ? "/1000" : "")
+                + SqlConstants.COMMA
+                + TextUtils.join(SqlConstants.COMMA, ObjectArrays.concat(standardModifiers,dateModifiers, String.class)) + ")");
+    }
+
+    public static Field divide(Field dividend, Field divisor){
+        return new Field("((" + dividend.toString() +")/(" + divisor.toString() + "))");
+    }
+
+    public static Field subtract(Field minuend, Field subtrahend){
+        return new Field("((" + minuend.toString() +")-(" + subtrahend.toString() + "))");
     }
 }

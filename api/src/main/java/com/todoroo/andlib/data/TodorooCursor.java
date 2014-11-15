@@ -21,7 +21,7 @@ import java.util.WeakHashMap;
  *
  * @param <TYPE> a model type that is returned by this cursor
  */
-public class TodorooCursor<TYPE extends AbstractModel> extends CursorWrapper {
+public class TodorooCursor<TYPE> extends CursorWrapper {
 
     /** Properties read by this cursor */
     private final Property<?>[] properties;

@@ -24,4 +24,9 @@ public final class SqlConstants {
     public static final String WHERE = "WHERE";
     public static final String NOT = "NOT";
     public static final String LIMIT = "LIMIT";
+    public static final String DATEMODIFIER_LOCALTIME = "'localtime'";
+    public static final String DATEMODIFIER_START_OF_DAY = "'start of day'";
+    public static final String DATEMODIFIER_START_OF_MONTH = "'start of month'";
+    public static final String DATEMODIFIER_UNIXEPOCH = "'unixepoch'";
+    public static final String DATEMODIFIER_START_OF_NEXT_WEEK = "'weekday 0'";
 }
