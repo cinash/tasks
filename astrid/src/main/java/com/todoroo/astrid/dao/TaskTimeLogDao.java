@@ -12,6 +12,7 @@ import com.todoroo.andlib.sql.Criterion;
 import com.todoroo.andlib.sql.Field;
 import com.todoroo.andlib.sql.Functions;
 import com.todoroo.andlib.sql.Join;
+import com.todoroo.andlib.sql.Order;
 import com.todoroo.andlib.sql.Query;
 import com.todoroo.andlib.sql.SqlConstants;
 import com.todoroo.andlib.sql.SqlTable;
@@ -201,9 +202,9 @@ public class TaskTimeLogDao extends RemoteModelDao<TaskTimeLog> {
                 .groupBy(groupBy.toArray(new Field[groupBy.size()]));
 
         Query sumQuery = Query.select(new Property.StringFunctionProperty("'" + TimeLogReport.REPORT_TYPE_SUM + "'", TimeLogReport.REPORT_TYPE.name),
-                    endTime, sumProperty, startTime,
-                    new Property.LongFunctionProperty("-1", TimeLogReport.OBJECT_ID.name),
-                    new Property.StringFunctionProperty("''", TimeLogReport.NAME.name))
+                endTime, sumProperty, startTime,
+                new Property.LongFunctionProperty("-1", TimeLogReport.OBJECT_ID.name),
+                new Property.StringFunctionProperty("''", TimeLogReport.NAME.name))
                 .from(TaskTimeLog.TABLE)
                 .groupBy(startTime);
 
