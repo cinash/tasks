@@ -12,20 +12,18 @@ import com.todoroo.andlib.sql.Criterion;
 import com.todoroo.andlib.sql.Field;
 import com.todoroo.andlib.sql.Functions;
 import com.todoroo.andlib.sql.Join;
-import com.todoroo.andlib.sql.Order;
 import com.todoroo.andlib.sql.Query;
 import com.todoroo.andlib.sql.SqlConstants;
+import com.todoroo.astrid.data.Metadata;
 import com.todoroo.astrid.data.TagData;
 import com.todoroo.astrid.data.Task;
 import com.todoroo.astrid.data.TaskTimeLog;
-import com.todoroo.astrid.data.views.AbstractTimeLogReport;
-import com.todoroo.astrid.data.views.TimeLogByListReport;
-import com.todoroo.astrid.data.views.TimeLogByTaskReport;
+import com.todoroo.astrid.data.views.TimeLogReport;
+import com.todoroo.astrid.tags.TaskToTagMetadata;
 
 import org.tasks.helper.UUIDHelper;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -139,19 +137,36 @@ public class TaskTimeLogDao extends RemoteModelDao<TaskTimeLog> {
         query(callback, Query.select(TaskTimeLog.PROPERTIES).where(TaskTimeLogCriteria.byTaskId(taskId)));
     }
 
-    public <T extends AbstractTimeLogReport> TodorooCursor<T> getReport(Class<T> type, AbstractTimeLogReport.GroupByTime timeSpan){
+    public <T extends TimeLogReport> TodorooCursor<T> getReport(TimeLogReport.GroupByType type, TimeLogReport.GroupByTime timeSpan){
         List<Field> select = new ArrayList<>();
-        select.add(new Property.LongFunctionProperty(Aggregations.sum(TaskTimeLog.TIME_SPENT).toString(),AbstractTimeLogReport.TIME_SUM.getColumnName()));
+        Property.LongFunctionProperty sumProperty = new Property.LongFunctionProperty(Aggregations.sum(TaskTimeLog.TIME_SPENT).toString(), TimeLogReport.TIME_SUM.getColumnName());
         List<Field> groupBy = new ArrayList<>();
+        List<Join> joins = new ArrayList<>();
         Field startTime=null, endTime=null;
-        Field secondaryOrder=null;
-        if (type.equals(TimeLogByTaskReport.class)){
-            groupBy.addAll(Arrays.asList(Task.PROPERTIES));
-            secondaryOrder = Task.TITLE;
-        } else if (type.equals(TimeLogByListReport.class)){
-            groupBy.addAll(Arrays.asList(TagData.PROPERTIES));
-            secondaryOrder = TagData.NAME;
+        Property.LongProperty objectId = null;
+        Property.StringProperty name = null;
+        String reportTypeString = null;
+        Join taskJoin = Join.inner(Task.TABLE, TaskTimeLog.TASK_ID.eq(Task.ID));
+        switch (type){
+            case TASK:
+                objectId = Task.ID;
+                name = Task.TITLE;
+                reportTypeString = TimeLogReport.REPORT_TYPE_TASK;
+                joins.add(taskJoin);
+                break;
+            case LIST:
+                objectId = TagData.ID;
+                name = TagData.NAME;
+                reportTypeString = TimeLogReport.REPORT_TYPE_LIST;
+                joins.add(taskJoin);
+                joins.add(Join.left(Metadata.TABLE, TaskToTagMetadata.TASK_UUID.eq(Task.UUID)));
+                joins.add(Join.left(TagData.TABLE, TaskToTagMetadata.TAG_UUID.eq(TagData.UUID)));
+                break;
         }
+
+        objectId = objectId.as(TimeLogReport.OBJECT_ID.name);
+        name = name.as(TimeLogReport.NAME.name);
+        Property.StringProperty reportType = new Property.StringFunctionProperty("'" + reportTypeString + "'", TimeLogReport.REPORT_TYPE.name);
 
         switch (timeSpan){
             case DAY:
@@ -167,24 +182,39 @@ public class TaskTimeLogDao extends RemoteModelDao<TaskTimeLog> {
                 endTime = Functions.date(false, startTime, "'+31 days'", SqlConstants.DATEMODIFIER_START_OF_MONTH);
                 break;
         }
-        startTime = new Property.StringFunctionProperty(startTime.toString(), AbstractTimeLogReport.REPORT_ENTRY_START.getColumnName());
-        endTime = new Property.StringFunctionProperty(endTime.toString(),AbstractTimeLogReport.REPORT_ENTRY_END.getColumnName());
+        startTime = new Property.StringFunctionProperty(startTime.toString(), TimeLogReport.REPORT_ENTRY_START.getColumnName());
+        endTime = new Property.StringFunctionProperty(endTime.toString(), TimeLogReport.REPORT_ENTRY_END.getColumnName());
         groupBy.add(startTime);
+        groupBy.add(objectId);
+        groupBy.add(name);
+
+        select.add(reportType);
         select.add(endTime);
+        select.add(sumProperty);
         select.addAll(groupBy);
 
-        Order order = Order.desc(startTime);
-        order.addSecondaryExpression(Order.asc(secondaryOrder));
-
-        Query query = Query.select(select.toArray(new Field[select.size()]))
+        Query dataQuery = Query.select(select.toArray(new Field[select.size()]))
                 .from(TaskTimeLog.TABLE)
-                .join(Join.inner(Task.TABLE, TaskTimeLog.TASK_ID.eq(Task.ID)))
-                .groupBy(groupBy.toArray(new Field[groupBy.size()]))
-                .orderBy(order);
+                .join(joins.toArray(new Join[joins.size()]))
+                .groupBy(groupBy.toArray(new Field[groupBy.size()]));
+
+        Query sumQuery = Query.select(new Property.StringFunctionProperty("'" + TimeLogReport.REPORT_TYPE_SUM + "'", TimeLogReport.REPORT_TYPE.name),
+                    endTime, sumProperty, startTime,
+                    new Property.LongFunctionProperty("-1", TimeLogReport.OBJECT_ID.name),
+                    new Property.StringFunctionProperty("''", TimeLogReport.NAME.name))
+                .from(TaskTimeLog.TABLE)
+                .groupBy(startTime);
 
 
-        Cursor cursor = database.rawQuery(query.toString());
+        String combinedQuery = "select * " +
+                "from (" + dataQuery.toString() + " " +
+                    "union " + sumQuery.toString() + ")" +
+                "order by " + startTime.toString() + " desc, " +
+                TimeLogReport.REPORT_TYPE.name + ", " +
+                TimeLogReport.NAME.name;
 
-        return new TodorooCursor<>(cursor, query.getFields());
+        Cursor cursor = database.rawQuery(combinedQuery);
+
+        return new TodorooCursor<>(cursor, dataQuery.getFields());
     }
 }

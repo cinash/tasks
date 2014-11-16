@@ -126,7 +126,7 @@ public final class Query {
         }
         sql.append(GROUP_BY);
         for (Field groupBy : groupBies) {
-            sql.append(SPACE).append(groupBy).append(COMMA);
+            sql.append(SPACE).append(groupBy.toStringInGroupBy()).append(COMMA);
         }
         sql.deleteCharAt(sql.length() - 1).append(SPACE);
     }

@@ -78,4 +78,8 @@ public abstract class DBObject<T extends DBObject<?>> implements Cloneable {
         }
         return sb.toString();
     }
+
+    public final String toStringInGroupBy(){
+        return expression;
+    }
 }
