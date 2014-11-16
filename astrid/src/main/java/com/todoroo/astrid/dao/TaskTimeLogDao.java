@@ -14,6 +14,8 @@ import com.todoroo.andlib.sql.Functions;
 import com.todoroo.andlib.sql.Join;
 import com.todoroo.andlib.sql.Query;
 import com.todoroo.andlib.sql.SqlConstants;
+import com.todoroo.andlib.sql.SqlTable;
+import com.todoroo.andlib.sql.UnionQuery;
 import com.todoroo.astrid.data.Metadata;
 import com.todoroo.astrid.data.TagData;
 import com.todoroo.astrid.data.Task;
@@ -206,14 +208,10 @@ public class TaskTimeLogDao extends RemoteModelDao<TaskTimeLog> {
                 .groupBy(startTime);
 
 
-        String combinedQuery = "select * " +
-                "from (" + dataQuery.toString() + " " +
-                    "union " + sumQuery.toString() + ")" +
-                "order by " + startTime.toString() + " desc, " +
-                TimeLogReport.REPORT_TYPE.name + ", " +
-                TimeLogReport.NAME.name;
+        UnionQuery union = UnionQuery.unionQuery(dataQuery, sumQuery);
+        Query combinedQuery = Query.select(union.getFields()).from(SqlTable.table(union)).orderBy(Order.desc(startTime), Order.asc(TimeLogReport.REPORT_TYPE), Order.asc(TimeLogReport.NAME));
 
-        Cursor cursor = database.rawQuery(combinedQuery);
+        Cursor cursor = database.rawQuery(combinedQuery.toString());
 
         return new TodorooCursor<>(cursor, dataQuery.getFields());
     }
