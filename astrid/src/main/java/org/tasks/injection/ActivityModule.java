@@ -30,6 +30,7 @@ import com.todoroo.astrid.tags.TagFilterExposer;
 import com.todoroo.astrid.timers.TimerFilterExposer;
 import com.todoroo.astrid.widget.WidgetConfigActivity;
 
+import org.tasks.timelog.TimeLogReportsActivity;
 import org.tasks.voice.VoiceCommandActivity;
 
 import javax.inject.Singleton;
@@ -41,6 +42,7 @@ import dagger.Provides;
         injects = {
         TaskListActivity.class,
         TaskEditActivity.class,
+        TimeLogReportsActivity.class,
         ShareLinkActivity.class,
         TagSettingsActivity.class,
         TagSettingsActivityTablet.class,

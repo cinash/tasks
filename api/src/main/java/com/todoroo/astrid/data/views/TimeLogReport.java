@@ -25,7 +25,7 @@ public class TimeLogReport extends AbstractViewModel {
     //it is important that REPORT_TYPE_SUM is first when sorting lexicographically
     public static final String REPORT_TYPE_TASK = "TASK";
     public static final String REPORT_TYPE_LIST = "LIST";
-    public static final String REPORT_TYPE_SUM = "SUM";
+    public static final String REPORT_TYPE_SUM = "AAA_SUM";
 
 
     public static final Property.StringProperty REPORT_TYPE = new Property.StringProperty((Table) null, "report_type");

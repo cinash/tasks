@@ -18,6 +18,8 @@ import com.todoroo.astrid.tags.TagFilterExposer;
 import com.todoroo.astrid.timers.TimerFilterExposer;
 import com.todoroo.astrid.ui.QuickAddBar;
 
+import org.tasks.timelog.TimeLogReportsFragment;
+
 import javax.inject.Singleton;
 
 import dagger.Module;
@@ -26,6 +28,7 @@ import dagger.Provides;
 @Module(addsTo = TasksModule.class,
         injects = {
         TaskListFragment.class,
+        TimeLogReportsFragment.class,
         GtasksListFragment.class,
         NotificationFragment.class,
         SubtasksTagListFragment.class,

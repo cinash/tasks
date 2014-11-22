@@ -530,6 +530,8 @@
                 <data android:mimeType="text/plain"/>
             </intent-filter>
         </activity>
+        
+        <activity android:name="org.tasks.timelog.TimeLogReportsActivity"/>
 
         <service android:name="com.todoroo.astrid.reminders.ReminderSchedulingService" />
 

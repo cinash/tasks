@@ -30,4 +30,19 @@
     <string name="TEA_timer_button_deleteTimeLog">Delete</string>
 
     <string name="TEA_timer_addTimeLog_hint">Enter what you did</string>
+
+    <string name="timeReport_groupBy">Group by:</string>
+
+    <string name="timeReport_noList">(no list)</string>
+
+    <string-array name="timeReport_combo_timespan">
+        <item>Day</item>
+        <item>Week</item>
+        <item>Month</item>
+    </string-array>
+
+    <string-array name="timeReport_combo_type">
+        <item>Task</item>
+        <item>List</item>
+    </string-array>
 </resources>

@@ -51,6 +51,7 @@ import net.simonvt.menudrawer.MenuDrawer;
 
 import org.tasks.R;
 import org.tasks.preferences.ActivityPreferences;
+import org.tasks.timelog.TimeLogReportsActivity;
 
 import javax.inject.Inject;
 
@@ -541,6 +542,9 @@ public class TaskListActivity extends AstridActivity implements OnPageChangeList
                 return true;
             case R.id.menu_support:
                 startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://abaker.github.io/tasks/")));
+                return true;
+            case R.id.menu_timeLog_stats:
+                startActivity(new Intent(this, TimeLogReportsActivity.class));
                 return true;
             default:
                 return super.onOptionsItemSelected(item);

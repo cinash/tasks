@@ -39,6 +39,10 @@
         android:title="@string/FLA_new_filter"
         tasks:showAsAction="never" />
     <item
+        android:id="@+id/menu_timeLog_stats"
+        android:title="@string/FLA_timeLog_stats"
+        tasks:showAsAction="never" />
+    <item
         android:id="@+id/menu_support"
         android:title="@string/TLA_menu_support"
         tasks:showAsAction="never"/>

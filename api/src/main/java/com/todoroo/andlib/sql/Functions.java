@@ -62,11 +62,11 @@ public final class Functions {
                 + TextUtils.join(SqlConstants.COMMA, ObjectArrays.concat(standardModifiers,dateModifiers, String.class)) + ")");
     }
 
-    public static Field divide(Field dividend, Field divisor){
-        return new Field("((" + dividend.toString() +")/(" + divisor.toString() + "))");
-    }
-
     public static Field subtract(Field minuend, Field subtrahend){
         return new Field("((" + minuend.toString() +")-(" + subtrahend.toString() + "))");
+    }
+
+    public static Field ifnull(Field x, Field y){
+        return new Field("ifnull(" + x + "," + y + ")");
     }
 }

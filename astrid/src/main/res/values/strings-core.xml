@@ -197,6 +197,8 @@
   
   <!-- Menu: new filter -->
   <string name="FLA_new_filter">New Filter</string>
+
+  <string name="FLA_timeLog_stats">Time spent report</string>
   
   <!-- slide 10e: Button: new list -->
   <string name="FLA_new_list">New List</string>
