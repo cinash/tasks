@@ -69,7 +69,7 @@ public class TimeLogReportAdapter extends CursorAdapter {
         TimeLogReport timeLogReport = new TimeLogReport(todorooCursor);
         if (timeLogReport.getReportType().equals(TimeLogReport.REPORT_TYPE_SUM)){
             SumViewHolder viewHolder = (SumViewHolder) view.getTag();
-            viewHolder.dateTextView.setText(timeLogReport.getEntryStart().toString());
+            viewHolder.dateTextView.setText(DateUtils.formatDateRange(context, timeLogReport.getEntryStart().getTime(), timeLogReport.getEntryEnd().getTime(), DateUtils.FORMAT_NO_MIDNIGHT));
             viewHolder.timeTextView.setText(DateUtils.formatElapsedTime(timeLogReport.getTimeSpent()));
         } else {
             TaskViewHolder viewHolder = (TaskViewHolder) view.getTag();

@@ -212,6 +212,11 @@
     <style name="TextAppearance" parent="android:TextAppearance">
         <item name="android:textColor">?attr/asTextColor</item>    
     </style>
+
+    <style name="HeaderTextAppearance" parent="TextAppearance">
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">18sp</item>
+    </style>
     
     <!-- generic style for labels above edit boxes -->
     <style name="TextAppearance.GEN_EditLabel">
