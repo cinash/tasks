@@ -12,7 +12,6 @@ import android.widget.Spinner;
 
 import com.todoroo.astrid.adapter.TimeLogReportAdapter;
 import com.todoroo.astrid.dao.TaskTimeLogDao;
-import com.todoroo.astrid.data.views.TimeLogReport;
 
 import org.tasks.R;
 import org.tasks.injection.InjectingListFragment;

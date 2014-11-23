@@ -295,4 +295,14 @@ public class DatabaseDao<TYPE extends AbstractModel> {
             cursor.close();
         }
     }
+
+    public <T extends AbstractViewModel> TodorooCursor<T> createViewCursor(Query query, Property<?>[] fields){
+        Cursor cursor = database.rawQuery(query.toString());
+
+        return new TodorooCursor<>(cursor, fields);
+    }
+
+    public <T extends AbstractViewModel> TodorooCursor<T> createViewCursor(AbstractViewModel.ViewQuery<T> viewQuery){
+        return createViewCursor(viewQuery.getQuery(), viewQuery.getFields());
+    }
 }

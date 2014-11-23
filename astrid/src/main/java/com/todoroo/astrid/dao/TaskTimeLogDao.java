@@ -8,25 +8,14 @@ import com.todoroo.andlib.data.AbstractModel;
 import com.todoroo.andlib.data.Callback;
 import com.todoroo.andlib.data.Property;
 import com.todoroo.andlib.data.TodorooCursor;
-import com.todoroo.andlib.sql.Aggregations;
 import com.todoroo.andlib.sql.Criterion;
-import com.todoroo.andlib.sql.Field;
-import com.todoroo.andlib.sql.Functions;
-import com.todoroo.andlib.sql.Join;
-import com.todoroo.andlib.sql.Order;
 import com.todoroo.andlib.sql.Query;
-import com.todoroo.andlib.sql.SqlConstants;
-import com.todoroo.andlib.sql.SqlTable;
-import com.todoroo.andlib.sql.UnionQuery;
-import com.todoroo.astrid.data.Metadata;
-import com.todoroo.astrid.data.TagData;
 import com.todoroo.astrid.data.Task;
 import com.todoroo.astrid.data.TaskTimeLog;
-import com.todoroo.astrid.data.views.TimeLogReport;
-import com.todoroo.astrid.tags.TaskToTagMetadata;
 
-import org.tasks.R;
 import org.tasks.helper.UUIDHelper;
+import org.tasks.timelog.TimeLogReport;
+import org.tasks.timelog.TimeLogReportCreator;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -138,88 +127,13 @@ public class TaskTimeLogDao extends RemoteModelDao<TaskTimeLog> {
         return result;
     }
 
-    public void byTask(long taskId, Callback<TaskTimeLog> callback) {
-        query(callback, Query.select(TaskTimeLog.PROPERTIES).where(TaskTimeLogCriteria.byTaskId(taskId)));
+    public TodorooCursor<TimeLogReport> getReport(TimeLogReport.GroupByType type, TimeLogReport.GroupByTime timeSpan, Context context){
+        return createViewCursor(TimeLogReportCreator.createQuery(type, timeSpan, context));
     }
 
-    public <T extends TimeLogReport> TodorooCursor<T> getReport(TimeLogReport.GroupByType type, TimeLogReport.GroupByTime timeSpan, Context context){
-        List<Field> select = new ArrayList<>();
-        Property.LongFunctionProperty sumProperty = new Property.LongFunctionProperty(Aggregations.sum(TaskTimeLog.TIME_SPENT).toString(), TimeLogReport.TIME_SUM.getColumnName());
-        Property.LongProperty idProperty = new Property.LongFunctionProperty(Aggregations.min(TaskTimeLog.ID).toString(), "_id");
-        Property.LongProperty idForSumProperty = new Property.LongFunctionProperty(Aggregations.min(TaskTimeLog.ID).toString() + " + 1000000000000000", "_id");
-        List<Field> groupBy = new ArrayList<>();
-        List<Join> joins = new ArrayList<>();
-        Field startTime=null, endTime=null;
-        Property.LongProperty objectId = null;
-        Property.StringProperty name = null;
-        String reportTypeString = null;
-        Join taskJoin = Join.inner(Task.TABLE, TaskTimeLog.TASK_ID.eq(Task.ID));
-        switch (type){
-            case TASK:
-                objectId = Task.ID;
-                name = Task.TITLE;
-                reportTypeString = TimeLogReport.REPORT_TYPE_TASK;
-                joins.add(taskJoin);
-                break;
-            case LIST:
-                objectId = new Property.LongFunctionProperty(Functions.ifnull(TagData.ID, new Property.LongFunctionProperty("-1", null)).toString(), null);
-                name = new Property.StringFunctionProperty(Functions.ifnull(TagData.NAME, new Property.StringFunctionProperty("'" + context.getString(R.string.timeReport_noList) + "'", null)).toString(), null);
-                reportTypeString = TimeLogReport.REPORT_TYPE_LIST;
-                joins.add(taskJoin);
-                joins.add(Join.left(Metadata.TABLE, TaskToTagMetadata.TASK_UUID.eq(Task.UUID)));
-                joins.add(Join.left(TagData.TABLE, TaskToTagMetadata.TAG_UUID.eq(TagData.UUID)));
-                break;
-        }
-
-        objectId = objectId.as(TimeLogReport.OBJECT_ID.name);
-        name = name.as(TimeLogReport.NAME.name);
-        Property.StringProperty reportType = new Property.StringFunctionProperty("'" + reportTypeString + "'", TimeLogReport.REPORT_TYPE.name);
-
-        switch (timeSpan){
-            case DAY:
-                startTime = Functions.date(TaskTimeLog.TIME, SqlConstants.DATEMODIFIER_START_OF_DAY);
-                endTime = Functions.date(false, startTime, "'+1 day'");
-                break;
-            case WEEK:
-                startTime = Functions.date(TaskTimeLog.TIME, SqlConstants.DATEMODIFIER_START_OF_NEXT_WEEK, "'-7 days'");
-                endTime = Functions.date(false, startTime, "'+7 days'");
-                break;
-            case MONTH:
-                startTime = Functions.date(TaskTimeLog.TIME, SqlConstants.DATEMODIFIER_START_OF_MONTH);
-                endTime = Functions.date(false, startTime, "'+31 days'", SqlConstants.DATEMODIFIER_START_OF_MONTH);
-                break;
-        }
-        startTime = new Property.StringFunctionProperty(startTime.toString(), TimeLogReport.REPORT_ENTRY_START.getColumnName());
-        endTime = new Property.StringFunctionProperty(endTime.toString(), TimeLogReport.REPORT_ENTRY_END.getColumnName());
-        groupBy.add(startTime);
-        groupBy.add(objectId);
-        groupBy.add(name);
-
-        select.add(reportType);
-        select.add(endTime);
-        select.add(sumProperty);
-        select.addAll(groupBy);
-        select.add(idProperty);
-
-        Query dataQuery = Query.select(select.toArray(new Field[select.size()]))
-                .from(TaskTimeLog.TABLE)
-                .join(joins.toArray(new Join[joins.size()]))
-                .groupBy(groupBy.toArray(new Field[groupBy.size()]));
-
-        Query sumQuery = Query.select(new Property.StringFunctionProperty("'" + TimeLogReport.REPORT_TYPE_SUM + "'", TimeLogReport.REPORT_TYPE.name),
-                endTime, sumProperty, startTime,
-                new Property.LongFunctionProperty("-1", TimeLogReport.OBJECT_ID.name),
-                new Property.StringFunctionProperty("''", TimeLogReport.NAME.name),
-                idForSumProperty)
-                .from(TaskTimeLog.TABLE)
-                .groupBy(startTime);
 
 
-        UnionQuery union = UnionQuery.unionQuery(dataQuery, sumQuery);
-        Query combinedQuery = Query.select().from(SqlTable.table(union)).orderBy(Order.desc(startTime), Order.asc(TimeLogReport.REPORT_TYPE), Order.desc(sumProperty));
-
-        Cursor cursor = database.rawQuery(combinedQuery.toString());
-
-        return new TodorooCursor<>(cursor, dataQuery.getFields());
+    public void byTask(long taskId, Callback<TaskTimeLog> callback) {
+        query(callback, Query.select(TaskTimeLog.PROPERTIES).where(TaskTimeLogCriteria.byTaskId(taskId)));
     }
 }

@@ -2,6 +2,8 @@ package com.todoroo.andlib.data;
 
 import android.content.ContentValues;
 
+import com.todoroo.andlib.sql.Query;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,5 +65,24 @@ public class AbstractViewModel {
             throw new UnsupportedOperationException(
                     "Model Error: Did not read property " + property.name); //$NON-NLS-1$
         }
+    }
+
+    public static class ViewQuery<T extends AbstractViewModel> {
+        private Query query;
+        private Property<?>[] fields;
+
+        public ViewQuery(Query query, Property<?>[] fields) {
+            this.query = query;
+            this.fields = fields;
+        }
+
+        public Query getQuery() {
+            return query;
+        }
+
+        public Property<?>[] getFields() {
+            return fields;
+        }
+
     }
 }

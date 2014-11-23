@@ -1,4 +1,4 @@
-package com.todoroo.astrid.data.views;
+package org.tasks.timelog;
 
 import com.todoroo.andlib.data.AbstractViewModel;
 import com.todoroo.andlib.data.Property;

@@ -11,9 +11,9 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.todoroo.andlib.data.TodorooCursor;
-import com.todoroo.astrid.data.views.TimeLogReport;
 
 import org.tasks.R;
+import org.tasks.timelog.TimeLogReport;
 
 public class TimeLogReportAdapter extends CursorAdapter {
 
